@@ -22,5 +22,25 @@ gdistance <- function(lat1, lat2, lon1, lon2) {
     return(d)
 }
 
+dt <- shipsraw[ship_type == "Tanker",]
+dt <- dt[SHIPNAME == "BALTICO",]
 
 
+maxdistance <- function(dt) {
+    dtuse <- data.table(lat1 = dt[1:(.N-1),LAT],
+        lat2 = dt[2:(.N),LAT],
+        lon1 = dt[1:(.N-1),LON],
+        lon2 = dt[2:(.N),LON],
+        datetime = dt[1:(.N-1),DATETIME])
+    # skip gdistance calculation for some rows which distance is 0 
+    # to improve performance
+    dtuse <- dtuse[!(lat1 == lat2 & lon1 == lon2),]
+    d <- vapply(1:nrow(dtuse), function(x) {
+        gdistance(dtuse[x,lat1], dtuse[x, lat2],
+            dtuse[x, lon1], dtuse[x, lon2])}, 0.0)
+    dtuse[,distance := d]
+    # now sort dtuse by distance in descending order and by datetime
+    # in ascending order
+    dtuse <- dtuse[order(-distance, datetime)]
+    return(dtuse)
+}
