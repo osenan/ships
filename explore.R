@@ -1,7 +1,9 @@
 library(data.table)
 library(shiny)
+library(leaflet)
 
 shipsraw <- fread("ships.csv")
+iconred <- makeAwesomeIcon(icon= "flag", markerColor = "red", library = "fa")
 
 gdistance <- function(lat1, lat2, lon1, lon2) {
     # function based on Haversine formula for computing geographical distances
@@ -45,3 +47,4 @@ maxdistance <- function(dt) {
     dtuse <- dtuse[order(-distance, datetime)]
     return(dtuse)
 }
+
