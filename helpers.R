@@ -1,6 +1,9 @@
 library(data.table)
 library(shiny)
+library(shiny.semantic)
 library(leaflet)
+library(plotly)
+library(RColorBrewer)
 
 shipsraw <- fread("ships.csv")
 iconred <- makeAwesomeIcon(icon= "flag", markerColor = "red", library = "fa")
@@ -25,16 +28,14 @@ gdistance <- function(lat1, lat2, lon1, lon2) {
     return(d)
 }
 
-dt <- shipsraw[ship_type == "Tanker",]
-dt <- dt[SHIPNAME == "BALTICO",]
-
-
 maxdistance <- function(dt) {
     dtuse <- data.table(lat1 = dt[1:(.N-1),LAT],
         lat2 = dt[2:(.N),LAT],
         lon1 = dt[1:(.N-1),LON],
         lon2 = dt[2:(.N),LON],
-        datetime = dt[1:(.N-1),DATETIME])
+        datetime1 = as.POSIXct(dt[1:(.N-1), DATETIME]),
+        datetime2 = as.POSIXct(dt[2:(.N), DATETIME]),
+        speed = dt[1:(.N -1), SPEED])
     # skip gdistance calculation for some rows which distance is 0 
     # to improve performance
     dtuse <- dtuse[!(lat1 == lat2 & lon1 == lon2),]
@@ -44,7 +45,29 @@ maxdistance <- function(dt) {
     dtuse[,distance := d]
     # now sort dtuse by distance in descending order and by datetime
     # in ascending order
-    dtuse <- dtuse[order(-distance, datetime)]
+    dtuse <- dtuse[order(-distance, datetime1)]
     return(dtuse)
 }
 
+timeformat <- function(secs) {
+    # function to export time difference and format
+    days <- secs %/% 86400
+    hours <- secs %% 86400 %/% 3600
+    minutes <- secs %% 3600 %/% 60
+    seconds <- secs %% 60
+
+    formatUnit <- function(value, unit) {
+        if(value > 0) {
+            dprint <- paste(value, unit, " ", sep = "")
+        } else {
+            dprint <- ""
+        }
+        return(dprint)
+    }
+
+    pday <- formatUnit(days, "d")
+    phour <- formatUnit(hours, "h")
+    pminute <- formatUnit(minutes, "m")
+    psecond <- formatUnit(seconds, "s")
+    return(sub(" $","",paste0(pday, phour, pminute, psecond)))
+}
