@@ -16,7 +16,7 @@ uiDropdown <- function(id, label = "dropdown") {
             div(class = "ui segment",
                 p("Filter data"),
                 checkbox_input(ns("outliers"), "remove outliers",
-                    is_marked = FALSE))
+                    is_marked = TRUE))
             )
     )
 }

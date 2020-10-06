@@ -17,7 +17,7 @@ ui <- semanticPage(
                          plotlyOutput("hist")
                          ),
                      div(class = "ui segment",
-                         plotlyOutput("ts", width = "200%")
+                         plotlyOutput("ts")
                          )
                      )),
             list(menu = "Overal statistics",
@@ -74,8 +74,8 @@ server <- function(input, output, session) {
         if((ship_info()[["type"]] != "")&&(ship_info()[["name"]] != "NA")) {
             dt <- shipsraw[ship_type == ship_info()[["type"]],]
             # also this if needed to prevent temporary error in dt
-            if(ship_info()[["name"]] %in% dt[, SHIPNAME]) {
-                dt <- dt[SHIPNAME == ship_info()[["name"]],]
+            if(ship_info()[["name"]] %in% dt[, SHIPNAME]) 
+{                dt <- dt[SHIPNAME == ship_info()[["name"]],]
                 dtmax <- maxdistance(dt,
                     outliers = ship_info()[["outliers"]])
                 # change reactive values to change stat info
@@ -176,13 +176,15 @@ server <- function(input, output, session) {
             fig <- plot_ly() %>%
                     add_lines(x = ~dtmax[order(datetime1),datetime1],
                         y = ~dtmax[order(datetime1),speed],
-                        mode = "lines", name = "speed" ,
+                        mode = "lines", name = "distance (m)" ,
                         type = "scatter") %>%
                     add_lines(x = ~dtmax[order(datetime1),datetime1],
                         y = ~dtmax[order(datetime1), distance],
-                        mode = "lines", name = "distance (m)",
+                        mode = "lines", name = "speed",
                         type = "scatter",
                         yaxis = "y2") %>%
+#                add_trace(y = ~dtmax[order(datetime1),speed], name = "speed") %>%
+#                add_trace(y = ~distance, name = "distance (m)") %>%
                     layout(
                         title = paste(
                             "Speed and distance time series for",
