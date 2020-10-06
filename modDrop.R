@@ -26,7 +26,8 @@ serverDropdown <- function(id) {
         function(input, output, session) {
             ns <- NS(id)
             dt <- reactive({
-                    return(shipsraw[ship_type == input$shiptype,])
+                req(input$shiptype)
+                return(shipsraw[ship_type == input$shiptype,])
             })
 
             output$dropdown_sname <- renderUI(

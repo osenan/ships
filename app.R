@@ -70,14 +70,14 @@ server <- function(input, output, session) {
     # map plot
     
     output$map <- renderLeaflet({
-        # if necessary to prevent errors when no vessel type selected
-        if((ship_info()[["type"]] != "")&&(ship_info()[["name"]] != "NA")) {
+        req(ship_info()[["type"]] != "")
+        req(ship_info()[["name"]] != "NA")
             dt <- shipsraw[ship_type == ship_info()[["type"]],]
-            # also this if needed to prevent temporary error in dt
-            if(ship_info()[["name"]] %in% dt[, SHIPNAME]) 
-{                dt <- dt[SHIPNAME == ship_info()[["name"]],]
-                dtmax <- maxdistance(dt,
+        req(ship_info()[["name"]] %in% dt[, SHIPNAME]) 
+        dt <- dt[SHIPNAME == ship_info()[["name"]],]
+        dtmax <- maxdistance(dt,
                     outliers = ship_info()[["outliers"]])
+        req(nrow(dtmax) != 0)
                 # change reactive values to change stat info
                 values$maxd <- dtmax[1, distance] 
                 values$totd <- sum(dtmax[, distance])
@@ -108,8 +108,8 @@ server <- function(input, output, session) {
                             layersControlOptions(collapsed = FALSE)) %>%
                     addLegend(colors = c("gray","red"),
                               labels = c("All points", "Max distance"))
-            }
-        }
+         #   }
+        #}
     })
 
     # observe changes in ship name to reflect changes in stats
@@ -154,25 +154,24 @@ server <- function(input, output, session) {
 
     # histogram with distance distribution
     output$hist <- renderPlotly({
-        if((ship_info()[["type"]] != "")&&(ship_info()[["name"]] != "NA")) {
-            dt <- shipsraw[ship_type == ship_info()[["type"]],]
+        req(ship_info()[["type"]] != "")
+        req(ship_info()[["name"]] != "NA")
+        dt <- shipsraw[ship_type == ship_info()[["type"]],]
             # also this if needed to prevent temporary error in dt
-            if(ship_info()[["name"]] %in% dt[, SHIPNAME]) {
-                dt <- dt[SHIPNAME == ship_info()[["name"]],]
-                dtmax <- values$dtmax
+        dt <- dt[SHIPNAME == ship_info()[["name"]],]
+        dtmax <- values$dtmax
+        req(nrow(dtmax) != 0)
                 fig <- plot_ly(type = "histogram",
                      x = ~dtmax[,distance], name = "distance") %>%
                     layout(title = paste("Distance histogram for",
                         ship_info()[["name"]]),
                         yaxis = list(title = "counts"),
                         xaxis = list(title = "Distance (m) between consecutive observations"))
-            }
-        }
     })
 
     output$ts <- renderPlotly({
         dtmax <- values$dtmax
-        if(nrow(dtmax) != 0) {
+        req(nrow(dtmax) != 0)
             fig <- plot_ly() %>%
                     add_lines(x = ~dtmax[order(datetime1),datetime1],
                         y = ~dtmax[order(datetime1),speed],
@@ -183,8 +182,6 @@ server <- function(input, output, session) {
                         mode = "lines", name = "speed",
                         type = "scatter",
                         yaxis = "y2") %>%
-#                add_trace(y = ~dtmax[order(datetime1),speed], name = "speed") %>%
-#                add_trace(y = ~distance, name = "distance (m)") %>%
                     layout(
                         title = paste(
                             "Speed and distance time series for",
@@ -197,11 +194,11 @@ server <- function(input, output, session) {
                             ticks = dtmax[order(datetime1), datetime1])
                     )
                 fig
-            }
+            
     })
 
     output$bar <- renderPlotly({
-
+        req(ship_info()[["type"]] != "")
         nships <- vapply(unique(shipsraw[,ship_type]), function(x) {
             dtemp <- shipsraw[ship_type == x,]
             return(length(unique(dtemp[,SHIPNAME])))
