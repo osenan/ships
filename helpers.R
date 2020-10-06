@@ -5,7 +5,7 @@ library(leaflet)
 library(plotly)
 library(RColorBrewer)
 
-shipsraw <- fread("ships.csv")
+shipsraw <- readRDS("shipsraw.rds")
 iconred <- makeAwesomeIcon(icon= "flag", markerColor = "red", library = "fa")
 
 gdistance <- function(lat1, lat2, lon1, lon2) {
@@ -28,7 +28,7 @@ gdistance <- function(lat1, lat2, lon1, lon2) {
     return(d)
 }
 
-maxdistance <- function(dt) {
+maxdistance <- function(dt, outliers) {
     dtuse <- data.table(lat1 = dt[1:(.N-1),LAT],
         lat2 = dt[2:(.N),LAT],
         lon1 = dt[1:(.N-1),LON],
@@ -39,6 +39,13 @@ maxdistance <- function(dt) {
     # skip gdistance calculation for some rows which distance is 0 
     # to improve performance
     dtuse <- dtuse[!(lat1 == lat2 & lon1 == lon2),]
+    if(outliers == TRUE) {
+        out <- abs(as.numeric(
+            difftime(dtuse[,datetime2], dtuse[,datetime1],
+                     units = "secs")))%/%86400
+        # if true, remove data with intervals bigger than one day
+        dtuse <- dtuse[out == 0,]
+    }
     d <- vapply(1:nrow(dtuse), function(x) {
         gdistance(dtuse[x,lat1], dtuse[x, lat2],
             dtuse[x, lon1], dtuse[x, lon2])}, 0.0)

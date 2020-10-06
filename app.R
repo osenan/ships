@@ -1,8 +1,8 @@
 source("helpers.R")
 source("modDrop.R")
 
-
 ui <- semanticPage(
+    title = "Ships",
     flow_layout(
     uiOutput("maxd"),
     uiOutput("totd"),
@@ -76,7 +76,8 @@ server <- function(input, output, session) {
             # also this if needed to prevent temporary error in dt
             if(ship_info()[["name"]] %in% dt[, SHIPNAME]) {
                 dt <- dt[SHIPNAME == ship_info()[["name"]],]
-                dtmax <- maxdistance(dt)
+                dtmax <- maxdistance(dt,
+                    outliers = ship_info()[["outliers"]])
                 # change reactive values to change stat info
                 values$maxd <- dtmax[1, distance] 
                 values$totd <- sum(dtmax[, distance])
@@ -158,7 +159,7 @@ server <- function(input, output, session) {
             # also this if needed to prevent temporary error in dt
             if(ship_info()[["name"]] %in% dt[, SHIPNAME]) {
                 dt <- dt[SHIPNAME == ship_info()[["name"]],]
-                dtmax <- maxdistance(dt)
+                dtmax <- values$dtmax
                 fig <- plot_ly(type = "histogram",
                      x = ~dtmax[,distance], name = "distance") %>%
                     layout(title = paste("Distance histogram for",
@@ -198,6 +199,7 @@ server <- function(input, output, session) {
     })
 
     output$bar <- renderPlotly({
+
         nships <- vapply(unique(shipsraw[,ship_type]), function(x) {
             dtemp <- shipsraw[ship_type == x,]
             return(length(unique(dtemp[,SHIPNAME])))
@@ -209,6 +211,7 @@ server <- function(input, output, session) {
         bar <- plot_ly(x = dtbar1[,shipname], y = dtbar1[,value], type = "bar", marker = list(color = dtbar1[,color])) %>%
             layout(title = "Number of ships per ship type")
     })
+
 }
 
 shinyApp(ui, server)

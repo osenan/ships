@@ -12,7 +12,11 @@ uiDropdown <- function(id, label = "dropdown") {
             div(class = "ui segment",
                 p("Select ship name"),
                 uiOutput(ns("dropdown_sname"))
-                )
+                ),
+            div(class = "ui segment",
+                p("Filter data"),
+                checkbox_input(ns("outliers"), "remove outliers",
+                    is_marked = FALSE))
             )
     )
 }
@@ -29,7 +33,7 @@ serverDropdown <- function(id) {
                 dropdown_input(ns("shipname"), unique(dt()[,SHIPNAME]),
                     value = unique(dt()[,SHIPNAME])[1],
                     default_text = "No ship name selected"))
-            return(reactive({list(type = input$shiptype, name = input$shipname)}))
+            return(reactive({list(type = input$shiptype, name = input$shipname, outliers = input$outliers)}))
         }
         )
 }    
